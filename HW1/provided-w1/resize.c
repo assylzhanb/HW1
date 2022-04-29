@@ -19,17 +19,22 @@ int main(int argc, char *argv[]) {
   double factor = atof(argv[3]);
 
   /* Resizing and image to 0 isn't allowed */
-  if (factor <= 0) {
+  if (factor <= 0 || (1>factor && factor >0)) {
     goto error_usage;
   }
 
   if (load_png(input, &img)) {
     return 1;
   }
+  
 
   unsigned short height = img->size_y;
   unsigned short width = img->size_x;
+  if(height * factor > USHRT_MAX || width * factor < USHRT_MAX) {
+    goto error;
+  }
 
+  // BUG[4] unsigned short
   unsigned short new_height = (unsigned)(height * factor);
   unsigned short new_width = (unsigned)(width * factor);
 
@@ -44,8 +49,8 @@ int main(int argc, char *argv[]) {
 
   new_img->size_x = new_width;
   new_img->size_y = new_height;
-
-  new_img->px = malloc(n_pixels + sizeof(struct pixel));
+  // BUG [10] wrong operators - change "+" to "*"
+  new_img->px = malloc(n_pixels * sizeof(struct pixel));
 
   if (!new_img->px) {
     goto error_memory_img;

@@ -7,6 +7,8 @@
 
 /* We allocate the memory for the palette for this image */
 struct pixel *allocate_palette() {
+  // BUG [1] Unchecked system call returning code
+  // Must check if malloc worked
   struct pixel *ptr = malloc(sizeof(struct pixel));
   return ptr;
 }
@@ -29,7 +31,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Assign names to arguments for better abstraction */
-  char output_name[OUTPUT_NAME_SIZE];
+  char output_name[OUTPUT_NAME_SIZE]; // BUG [2] Buffer overflow/underflow
   strcpy(output_name, argv[1]);
   const char *height_arg = argv[2];
   const char *width_arg = argv[3];
@@ -39,13 +41,12 @@ int main(int argc, char *argv[]) {
   if (strlen(hex_color_arg) != 6) {
     goto error;
   }
-
   unsigned long height = strtol(height_arg, &end_ptr, 10);
 
   /* If the user provides negative height or the height is 0 and the end_ptr
    * hasn't moved we issue an error and free palette
    */
-  if (height >= USHRT_MAX || *end_ptr)
+  if (height >= USHRT_MAX || *end_ptr || height == 0)
     goto error;
 
   unsigned long width = strtol(width_arg, &end_ptr, 10);
@@ -120,10 +121,11 @@ int main(int argc, char *argv[]) {
    * By calling fflush we force the program to output "Size " right away
    */
   fflush(stdout);
-  strcat(command, "stat -c %s ");
-  strncat(command, output_name, OUTPUT_NAME_SIZE);
-  system(command);
-
+  // BUG [3] Command injection - remove all system calls
+  //strcat(command, "stat -c %s ");
+  //strncat(command, output_name, OUTPUT_NAME_SIZE);
+  //system(command);
+  // BUG [3]
   return 0;
 
   /* We use goto to jump to the corresponding error handling code.

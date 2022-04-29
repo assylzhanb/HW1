@@ -31,7 +31,8 @@ int main(int argc, char *argv[]) {
    */
 
   char *end_ptr;
-  long hex_color = strtol(argv[7], end_ptr, 16);
+  // BUG [11] Type error - passing char* to parameter of type char**
+  long hex_color = strtol(argv[7], &end_ptr, 16);
   if (*end_ptr || strlen(argv[7]) != 6 || hex_color < 0) {
     hex_color = 0;
   }
@@ -59,8 +60,10 @@ int main(int argc, char *argv[]) {
    * - above BR
    */
   unsigned i = 0;
-  unsigned j = 0;
+  // BUG [9] Iteration error
+  //unsigned j = 0;
   while (i < height) {
+    unsigned j = 0;
     while (j < width) {
       // Check if the pixel is in the rectangle
 
@@ -77,9 +80,11 @@ int main(int argc, char *argv[]) {
         image_data[i][j].blue = (hex_color & 0x0000ff);
         image_data[i][j].alpha = 0xff;
       }
-      i++;
+      //BUG [9] Iteration error
+      //i++;
       j++;
     }
+    i++;
   }
 
   store_png(output, img, NULL, 0);

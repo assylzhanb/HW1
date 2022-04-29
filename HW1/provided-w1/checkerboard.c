@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
   }
 
   long square_width = strtol(square_width_arg, &end_ptr, 10);
-
-  if (square_width <= 0 || *end_ptr) {
+  // BUG [5] HEAP OVERFLOW - change 
+  if (square_width <= 0 || square_width >= width || square_width >= height || *end_ptr) {
     goto error;
   }
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     free(img);
     goto error_img;
   }
-
+  
   img->size_x = width;
   img->size_y = height;
 
@@ -106,8 +106,9 @@ int main(int argc, char *argv[]) {
         int color = (i + j) % 2;
 
         /* Fill a square */
-        int square_top_left_x = j * square_width;
-        int square_top_left_y = i * square_width;
+        // BUG [4] - int too small
+        long long square_top_left_x = j * square_width;
+        long long square_top_left_y = i * square_width;
 
         /* This iterates over a square and fills it with the correct color */
         for (int x = 0; x < square_width; x++) {
@@ -142,7 +143,8 @@ error:
 error_px:
   free(img->px);
 error_img:
-  free(img);
+  // BUG [6] Temporal memory safety violation - just remove free(img)
+  //free(img); 
 error_mem:
   printf("Couldn't allocate memory\n");
   return 1;

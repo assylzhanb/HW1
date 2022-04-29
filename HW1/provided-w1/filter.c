@@ -19,8 +19,8 @@ void filter_grayscale(struct image *img, void *weight_arr) {
    *
    * FIX: Initialize both variables to 0.
    */
-  for (unsigned short i; i < img->size_y; i++) {
-    for (unsigned short j; j < img->size_x; j++) {
+  for (unsigned short i = 0; i < img->size_y; i++) {
+    for (unsigned short j = 0; j < img->size_x; j++) {
       double luminosity = 0;
 
       luminosity += weights[0] * image_data[i][j].red;
@@ -61,8 +61,9 @@ void filter_blur(struct image *img, void *r) {
   }
 
   /* We iterate over all pixels */
-  for (long i = 0; i <= img->size_y; i++) {
-    for (long j = 0; j <= img->size_x; j++) {
+  // BUG[9] Iteration error changed "<=" to "<"
+  for (long i = 0; i < img->size_y; i++) {
+    for (long j = 0; j < img->size_x; j++) {
 
       unsigned red = 0, green = 0, blue = 0, alpha = 0;
       /* We iterate over all pixels in the square */
@@ -105,8 +106,11 @@ void filter_blur(struct image *img, void *r) {
 
 /* We allocate and return a pixel */
 struct pixel *get_pixel() {
-  struct pixel px;
-  return &px;
+  // BUG [7] Local persisting pointers - can't return a local variable address 
+  // instead use malloc
+  //struct pixel px;
+  struct pixel* px = malloc(sizeof(struct pixel));
+  return px;
 }
 
 /* This filter just negates every color in the image */
@@ -196,10 +200,10 @@ void execute_filter(struct filter *fil) { fil->filter(fil->img, fil->arg); }
 
 int __attribute__((weak)) main(int argc, char *argv[]) {
   struct filter fil;
-  char input[ARG_SIZE];
-  char output[ARG_SIZE];
-  char command[ARG_SIZE];
-  char arg[ARG_SIZE];
+  char input[ARG_SIZE] = {0};
+  char output[ARG_SIZE] = {0};
+  char command[ARG_SIZE] = {0};
+  char arg[ARG_SIZE]= {0};
   int radius;
   struct pixel px;
   uint8_t alpha, depth, threshold;
@@ -219,10 +223,10 @@ int __attribute__((weak)) main(int argc, char *argv[]) {
   strncpy(input, argv[1], ARG_SIZE);
   strncpy(output, argv[2], ARG_SIZE);
   strncpy(command, argv[3], ARG_SIZE);
-
+  // BUG [8] String vulnerability
   /* If the filter takes an argument, copy it */
   if (argv[4]) {
-    strcpy(arg, argv[4]);
+    strncpy(arg, argv[4], ARG_SIZE);
   }
 
   /* Error when loading a png image */

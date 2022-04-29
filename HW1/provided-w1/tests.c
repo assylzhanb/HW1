@@ -191,12 +191,39 @@ END_TEST
  * The alpha channel needs to be intact in both cases */
 START_TEST(negative_functionality) {
   /* TODO: Implement */
+  srand(time(NULL) ^ getpid());
+  struct image img = generate_rand_img();
+  uint16_t sizee_x = img.size_x, sizee_y = img.size_y;
+  for (long i = 0; i < sizee_x * sizee_y; i++) {
+    img.px[i].green = 0;
+    img.px[i].red = 0;
+    img.px[i].blue = 0;
+    img.px[i].alpha = 128;
+  }
+  filter_negative(&img, NULL);
+  for (long i = 0; i < sizee_x * sizee_y; i++) {
+    ck_assert_uint_eq(img.px[i].green, 255);
+    ck_assert_uint_eq(img.px[i].red, 255);
+    ck_assert_uint_eq(img.px[i].blue, 255);
+    ck_assert_uint_eq(img.px[i].alpha, 128);
+  }
+  filter_negative(&img, NULL);
+  for (long i = 0; i < sizee_x * sizee_y; i++) {
+    ck_assert_uint_eq(img.px[i].green, 0);
+    ck_assert_uint_eq(img.px[i].red, 0);
+    ck_assert_uint_eq(img.px[i].blue, 0);
+    ck_assert_uint_eq(img.px[i].alpha, 128);
+  }
+  free(img.px);
 }
 END_TEST
 
 /* Check if the filter doesn't crash when we pass a 0x0 image */
 START_TEST(negative_zero_size) {
   /* TODO: Implement */
+  struct image *img;
+  ck_assert_uint_eq(load_png("./test_imgs/negative_edge_case.png", &img),0);
+  filter_negative(img,NULL);
 }
 END_TEST
 
@@ -210,8 +237,10 @@ START_TEST(blur_functionality) {
   struct image img = {3, 3, &px};
 
   /* TODO: Implement */
-}
+  //Didnt understand lol
+  // make it simpler pls
 END_TEST
+}
 
 /* Verify that the filter doesn't crash when we provide extreme values
  * for the radius (INT_MIN, INT_MAX, 0, image_width, image_height, all of the
@@ -220,18 +249,30 @@ struct image blur_radius_img;
 int blur_radii[20];
 START_TEST(blur_radius_edge_cases) {
   /* TODO: Implement */
+  struct image img_dup = duplicate_img(blur_radius_img);
+  filter_blur(&img_dup, &blur_radii[_i]);
+  free(img_dup.px);
 }
 END_TEST
 
 /* Verify for a random image that the transparency filter works properly */
 START_TEST(transparency_functionality) {
   /* TODO: Implement */
+  srand(time(NULL) ^ getpid());
+  struct image img = generate_rand_img();
+  uint8_t value = rand() % 256;
+  filter_transparency(&img, &value);
+  for (long i = 0; i <img.size_x * img.size_y; i++){
+    ck_assert_uint_eq(img.px[i].alpha,value);
+  }
+  free(img.px);
 }
 END_TEST
 
 /* Check if the function crashes when we pass nullptr as the argument */
 START_TEST(transparency_edge_case) {
   /* TODO: Implement */
+  filter_transparency(NULL, NULL);
 }
 END_TEST
 
@@ -253,6 +294,7 @@ int main() {
   blur_radius_img = generate_rand_img();
   int tmp[20] = {
   /* TODO: Fill in required radii */
+
   };
   memcpy(blur_radii, tmp, sizeof(blur_radii));
   tcase_add_loop_test(tc1, blur_radius_edge_cases, 0,
